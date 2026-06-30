@@ -11,10 +11,10 @@ function VerifyEmailForm() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email")?.trim() || "your email";
 
-  const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
-  const [error, setError] = useState<string | null>(null);
+  const [otp, setOtp] = useState(Array(6).fill(""));
+  const [error, setError] = useState(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e) {
     e.preventDefault();
     const message = otpCode(otp);
     if (message) {
@@ -24,7 +24,7 @@ function VerifyEmailForm() {
     router.push("/change-password");
   }
 
-  function handleChange(next: string[]) {
+  function handleChange(next) {
     setOtp(next);
     if (error) setError(null);
   }

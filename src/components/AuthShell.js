@@ -1,6 +1,6 @@
 import Logo from "./Logo";
 
-export default function AuthShell({ children }: { children: React.ReactNode }) {
+export default function AuthShell({ children }) {
   return (
     <div className="flex min-h-screen flex-col bg-[#0F0F0F] text-white">
       {/* Navbar (solid dark — not covered by the background) */}

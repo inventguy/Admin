@@ -1,23 +1,24 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { Validator } from "./validation";
 
-type Schema<T> = Partial<Record<keyof T, Validator>>;
-type Errors<T> = Partial<Record<keyof T, string>>;
-type Touched<T> = Partial<Record<keyof T, boolean>>;
-
-
-export function useForm<T extends Record<string, string>>(
-  initialValues: T,
-  schema: Schema<T>
-) {
-  const [values, setValues] = useState<T>(initialValues);
-  const [errors, setErrors] = useState<Errors<T>>({});
-  const [touched, setTouched] = useState<Touched<T>>({});
+/**
+ * Minimal form state with on-blur + on-submit validation.
+ *
+ * - A field validates on blur, then re-validates live once touched, so an error
+ *   disappears the instant the user fixes it.
+ * - `register(name)` returns everything a `<Field>` needs (value/onChange/onBlur/
+ *   error) — spread it in.
+ * - `submit(onValid)` validates the whole form and only calls `onValid` when it
+ *   passes; otherwise it surfaces every error at once.
+ */
+export function useForm(initialValues, schema) {
+  const [values, setValues] = useState(initialValues);
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
   const validateField = useCallback(
-    (name: keyof T, vals: T): string | undefined => {
+    (name, vals) => {
       const validate = schema[name];
       return validate ? validate(vals[name], vals) ?? undefined : undefined;
     },
@@ -25,7 +26,7 @@ export function useForm<T extends Record<string, string>>(
   );
 
   const setValue = useCallback(
-    (name: keyof T, value: string) => {
+    (name, value) => {
       const next = { ...values, [name]: value };
       setValues(next);
       if (touched[name]) {
@@ -36,7 +37,7 @@ export function useForm<T extends Record<string, string>>(
   );
 
   const handleBlur = useCallback(
-    (name: keyof T) => {
+    (name) => {
       setTouched((prev) => ({ ...prev, [name]: true }));
       setErrors((prev) => ({ ...prev, [name]: validateField(name, values) }));
     },
@@ -44,22 +45,21 @@ export function useForm<T extends Record<string, string>>(
   );
 
   const register = useCallback(
-    (name: keyof T) => ({
+    (name) => ({
       value: values[name],
       error: errors[name],
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-        setValue(name, e.target.value),
+      onChange: (e) => setValue(name, e.target.value),
       onBlur: () => handleBlur(name),
     }),
     [values, errors, setValue, handleBlur]
   );
 
   const submit = useCallback(
-    (onValid: (values: T) => void) => (event: React.FormEvent) => {
+    (onValid) => (event) => {
       event.preventDefault();
-      const nextErrors: Errors<T> = {};
+      const nextErrors = {};
       let valid = true;
-      (Object.keys(schema) as (keyof T)[]).forEach((name) => {
+      Object.keys(schema).forEach((name) => {
         const error = validateField(name, values);
         if (error) {
           nextErrors[name] = error;
@@ -68,9 +68,9 @@ export function useForm<T extends Record<string, string>>(
       });
       setErrors(nextErrors);
       setTouched(
-        (Object.keys(schema) as (keyof T)[]).reduce(
+        Object.keys(schema).reduce(
           (acc, name) => ({ ...acc, [name]: true }),
-          {} as Touched<T>
+          {}
         )
       );
       if (valid) onValid(values);

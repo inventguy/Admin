@@ -7,36 +7,28 @@ export default function OtpInput({
   value,
   onChange,
   invalid = false,
-}: {
-  length?: number;
-  value: string[];
-  onChange: (v: string[]) => void;
-  invalid?: boolean;
 }) {
-  const refs = useRef<Array<HTMLInputElement | null>>([]);
+  const refs = useRef([]);
 
-  function setDigit(index: number, digit: string) {
+  function setDigit(index, digit) {
     const next = [...value];
     next[index] = digit;
     onChange(next);
   }
 
-  function handleChange(index: number, raw: string) {
+  function handleChange(index, raw) {
     const digit = raw.replace(/\D/g, "").slice(-1);
     setDigit(index, digit);
     if (digit && index < length - 1) refs.current[index + 1]?.focus();
   }
 
-  function handleKeyDown(
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) {
+  function handleKeyDown(index, e) {
     if (e.key === "Backspace" && !value[index] && index > 0) {
       refs.current[index - 1]?.focus();
     }
   }
 
-  function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
+  function handlePaste(e) {
     e.preventDefault();
     const pasted = e.clipboardData
       .getData("text")
